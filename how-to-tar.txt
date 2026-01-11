@@ -1,0 +1,14 @@
+
+find . -type f -name '*Zone.Identifier' -print
+find . -type f -name '*Zone.Identifier' -delete
+find . -type f -name '*Zone.Identifier*' -print
+
+
+bijut@b:~/aws_apps/fred_fintech_app$
+tar \
+  --exclude='.venv' \
+  --exclude='__pycache__' \
+  --exclude='*.pyc' \
+  --exclude='node_modules' \
+  -cvf fred_fintech_app.tar .
+

@@ -1,0 +1,83 @@
+(.venv) bijut@b:~/aws_apps/fred_fintech_app/fred_dataset$ python download_fred_macro_pack.py --out ./fred_macro_pack --build-panel
+[INFO] Output directory: /home/bijut/aws_apps/fred_fintech_app/fred_dataset/fred_macro_pack
+[INFO] Downloading 11 series CSVs from FRED (macro pack + USREC)...
+  [01/11] CSV CPIAUCSL -> CPIAUCSL.csv
+         META CPIAUCSL -> CPIAUCSL.meta.json
+  [02/11] CSV UNRATE -> UNRATE.csv
+         META UNRATE -> UNRATE.meta.json
+  [03/11] CSV FEDFUNDS -> FEDFUNDS.csv
+         META FEDFUNDS -> FEDFUNDS.meta.json
+  [04/11] CSV DGS10 -> DGS10.csv
+         META DGS10 -> DGS10.meta.json
+  [05/11] CSV T10Y2Y -> T10Y2Y.csv
+         META T10Y2Y -> T10Y2Y.meta.json
+  [06/11] CSV INDPRO -> INDPRO.csv
+         META INDPRO -> INDPRO.meta.json
+  [07/11] CSV PCE -> PCE.csv
+         META PCE -> PCE.meta.json
+  [08/11] CSV M2SL -> M2SL.csv
+         META M2SL -> M2SL.meta.json
+  [09/11] CSV CSUSHPISA -> CSUSHPISA.csv
+         META CSUSHPISA -> CSUSHPISA.meta.json
+  [10/11] CSV UMCSENT -> UMCSENT.csv
+         META UMCSENT -> UMCSENT.meta.json
+  [11/11] CSV USREC -> USREC.csv
+         META USREC -> USREC.meta.json
+[INFO] Building model-ready monthly panel with recession_label...
+[OK] Wrote: /home/bijut/aws_apps/fred_fintech_app/fred_dataset/fred_macro_pack/panels/macro_panel_monthly.parquet
+[OK] Wrote: /home/bijut/aws_apps/fred_fintech_app/fred_dataset/fred_macro_pack/panels/macro_panel_monthly.csv
+[DONE] Download complete.
+(.venv) bijut@b:~/aws_apps/fred_fintech_app/fred_dataset$ head -n 2 fred_macro_pack/panels/macro_panel_monthly.csv
+tail -n 5 fred_macro_pack/panels/macro_panel_monthly.csv
+date_month_end,CPIAUCSL,UNRATE,FEDFUNDS,DGS10,T10Y2Y,INDPRO,PCE,M2SL,CSUSHPISA,UMCSENT,USREC,recession_label,CPIAUCSL_yoy_pct,PCE_yoy_pct,INDPRO_yoy_pct,CSUSHPISA_yoy_pct,UMCSENT_yoy_pct
+1919-01-31,,,,,,4.8739,,,,,1.0,1,,,,,
+2025-09-30,324.368,4.4,4.22,4.12047619047619,0.5519047619047619,101.6729,21206.6,22212.4,327.77,55.1,0.0,0,3.022699626172387,5.25620917627907,1.8680792398234836,1.3265157861870547,-21.398002853067045
+2025-10-31,,,4.09,4.0618181818181816,0.5404545454545455,101.616,,22298.0,328.977,53.6,0.0,0,,,2.15794791368209,1.3721635379817743,-23.97163120567376
+2025-11-30,325.031,4.5,3.88,4.0938888888888885,0.543888888888889,101.7935,,22322.4,,51.0,0.0,0,2.711969385272184,,2.5188206561421955,,-28.96935933147632
+2025-12-31,,4.4,3.72,4.1431818181818185,0.6422727272727273,,,,,,0.0,0,,,,,
+2026-01-31,,,,4.176,0.6933333333333334,,,,,,,0,,,,,
+(.venv) bijut@b:~/aws_apps/fred_fintech_app/fred_dataset$ python -c "import pandas as pd; df=pd.read_parquet('fred_macro_pack/panels/macro_panel_monthly.parquet'); print(df['recession_label'].value_counts(dropna=False)); print('rows=',len(df), 'cols=',df.shape[1])"
+recession_label
+0    1049
+1     236
+Name: count, dtype: int64
+rows= 1285 cols= 18
+(.venv) bijut@b:~/aws_apps/fred_fintech_app/fred_dataset$ python -c "import pandas as pd; df=pd.read_parquet('fred_macro_pack/panels/macro_panel_monthly.parquet'); print((df.isna().mean().sort_values(ascending=False)*100).head(15))"
+CSUSHPISA_yoy_pct    64.669261
+CSUSHPISA            63.735409
+T10Y2Y               53.618677
+UMCSENT_yoy_pct      49.338521
+UMCSENT              48.093385
+DGS10                40.155642
+PCE_yoy_pct          38.599222
+PCE                  37.665370
+M2SL                 37.509728
+FEDFUNDS             33.229572
+CPIAUCSL_yoy_pct     27.315175
+UNRATE               27.237354
+CPIAUCSL             26.381323
+INDPRO_yoy_pct        1.089494
+INDPRO                0.155642
+dtype: float64
+(.venv) bijut@b:~/aws_apps/fred_fintech_app/fred_dataset$
+
+
+Next recommended step (so it becomes a real ML backtest)
+
+To do a proper recession prediction backtest, you’ll typically create a forward-looking label, for example:
+
+recession_label_t_plus_6 = max(USREC in next 6 months)
+This answers: “Will we enter recession within 6 months?”
+
+If you want, I can provide a small follow-on script that:
+
+creates forward labels for 3/6/12 months,
+
+splits train/test by time (no leakage),
+
+trains a baseline model (logistic regression / XGBoost),
+
+outputs AUC, precision/recall, confusion matrix, and a simple feature importance report.
+
+Also, if your goal is the DaaS portal: we can now load the parquet into S3 + Glue + Athena, and your Next.js dashboard can query it via an API.
+

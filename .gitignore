@@ -1,0 +1,22 @@
+# Python / Environment
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+
+# IDEs
+.idea/
+.vscode/
+
+# Project Data & Artifacts (Don't commit large datasets)
+fred_macro_pack/
+*.tar
+*.tar.gz
+*.csv
+
+# AWS Configuration (Don't commit your specific Account IDs)
+src/config.py
+
+# Mac OS
+.DS_Store

@@ -1,0 +1,19 @@
+The error occurred because the previous deployment attempt left a "zombie" endpoint named fred-serverless-endpoint in a Failed state.
+
+In AWS SageMaker, you cannot update a Failed endpoint; you must delete it and recreate it. Your script crashed because it tried to create it (fail: already exists) but the error type (ValidationException) wasn't the specific one your code was catching (ResourceInUse), so it didn't try to update it.
+
+The Fix: Delete the "Zombie" Endpoint
+Run this AWS CLI command in your terminal to clear the path:
+
+Bash
+
+aws sagemaker delete-endpoint --endpoint-name fred-serverless-endpoint
+Next Step
+
+Next Step
+Once the deletion command finishes (it returns no output on success), simply re-run your deployment script:
+
+Bash
+
+python3 -m src.model.deploy_and_test
+This time, since the name is free, it will create a fresh, healthy endpoint using your new Version 3 model.

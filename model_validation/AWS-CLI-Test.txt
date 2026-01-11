@@ -1,0 +1,16 @@
+aws sagemaker-runtime invoke-endpoint \
+  --endpoint-name fred-serverless-endpoint \
+  --content-type "text/csv" \
+  --body "250.0, 5.25, -0.5, 102.5" \
+  --region us-east-1 \
+  output.txt && cat output.txt
+
+
+  # Endpoint status
+aws sagemaker describe-endpoint \
+  --endpoint-name fred-serverless-endpoint \
+  --query '{Status: EndpointStatus, Created: CreationTime}' \
+  --output table
+
+# Recent invocations (CloudWatch)
+aws logs tail /aws/sagemaker/Endpoints/fred-serverless-endpoint --since 1h

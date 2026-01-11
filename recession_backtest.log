@@ -1,0 +1,32 @@
+(.venv) bijut@b:~/aws_apps/fred_fintech_app/fred_dataset$ python recession_backtest.py \
+  --input ./fred_macro_pack/panels/macro_panel_monthly.parquet \
+  --horizons 3 6 12 \
+  --target-horizon 6 \
+  --test-start 2005-01-31 \
+  --lags 3 \
+  --shift-by 1 \
+  --model logreg \
+  --out ./backtest_out
+
+=== Backtest Summary ===
+Target:               recession_in_next_6m
+Train rows:           1032
+Test rows:            253
+Model:                logreg
+Leak-safe shift_by:   1 month(s)
+Extra lags:           3
+ROC-AUC:              0.8484
+PR-AUC:               0.4876
+Threshold:            0.85 (strategy=f1)
+Precision / Recall:   0.2812 / 0.9000
+F1:                   0.4286
+Confusion Matrix [ [TN, FP], [FN, TP] ]:
+[[154  69]
+ [  3  27]]
+
+Artifacts written:
+  - /home/bijut/aws_apps/fred_fintech_app/fred_dataset/backtest_out/predictions_recession_in_next_6m_logreg.csv
+  - /home/bijut/aws_apps/fred_fintech_app/fred_dataset/backtest_out/metrics_recession_in_next_6m_logreg.json
+  - /home/bijut/aws_apps/fred_fintech_app/fred_dataset/backtest_out/feature_importance_recession_in_next_6m_logreg.csv
+(.venv) bijut@b:~/aws_apps/fred_fintech_app/fred_dataset$
+

@@ -1,0 +1,77 @@
+# 1. Delete the failed new stack
+aws cloudformation delete-stack --stack-name fred-fintech-stack
+
+# 2. Check old stack exists
+aws cloudformation list-stacks --query 'StackSummaries[?StackName==`fred-poc-stack` && StackStatus!=`DELETE_COMPLETE`]'
+
+# 3. Empty the S3 bucket (required before stack deletion)
+aws s3 rm s3://fred-fintech-data-637423309379 --recursive
+
+# 4. Delete the old stack
+aws cloudformation delete-stack --stack-name fred-poc-stack
+
+# 5. Wait for deletion
+aws cloudformation wait stack-delete-complete --stack-name fred-poc-stack
+
+# 6. Now deploy the new stack
+aws cloudformation deploy \
+  --template-file template.yaml \
+  --stack-name fred-fintech-stack \
+  --parameter-overrides UserEmail=biju.tholath@email.com \
+  --capabilities CAPABILITY_NAMED_IAM
+##############################################################################
+aws s3 rm s3://fred-fintech-data-637423309379 --recursive 2>/dev/null; \
+aws cloudformation delete-stack --stack-name fred-poc-stack; \
+aws cloudformation delete-stack --stack-name fred-fintech-stack; \
+echo "Waiting 60s for deletion..."; sleep 60; \
+aws cloudformation deploy \
+  --template-file template.yaml \
+  --stack-name fred-fintech-stack \
+  --parameter-overrides UserEmail=biju.tholath@email.com \
+  --capabilities CAPABILITY_NAMED_IAM
+
+##############################################################################
+# 1. Empty the S3 bucket
+aws s3 rm s3://fred-fintech-data-637423309379 --recursive
+
+# 2. Delete the OLD stack (fred-poc-stack)
+aws cloudformation delete-stack --stack-name fred-poc-stack
+
+# 3. Wait for it to complete
+aws cloudformation wait stack-delete-complete --stack-name fred-poc-stack
+echo "Old stack deleted!"
+
+# 4. Delete the failed new stack
+aws cloudformation delete-stack --stack-name fred-fintech-stack
+
+# 5. Now deploy fresh
+aws cloudformation deploy \
+  --template-file template.yaml \
+  --stack-name fred-fintech-stack \
+  --parameter-overrides UserEmail=biju.tholath@email.com \
+  --capabilities CAPABILITY_NAMED_IAM
+
+##############################################################################
+# Deploy
+aws cloudformation deploy \
+  --template-file template.yaml \
+  --stack-name fred-fintech-stack \
+  --parameter-overrides UserEmail=biju.tholath@email.com \
+  --capabilities CAPABILITY_NAMED_IAM
+
+# Get outputs for config.py
+aws cloudformation describe-stacks \
+  --stack-name fred-fintech-stack \
+  --query 'Stacks[0].Outputs' \
+  --output table
+
+# Empty S3 bucket first
+aws s3 rm s3://fred-fintech-data-$(aws sts get-caller-identity --query Account --output text) --recursive
+
+# Delete stack
+aws cloudformation delete-stack --stack-name fred-fintech-stack
+
+aws sagemaker delete-model-package-group \
+  --model-package-group-name FredRecessionModels
+
+aws sagemaker list-model-package-groups --query 'ModelPackageGroupSummaryList[?ModelPackageGroupName==`FredRecessionModels`]'

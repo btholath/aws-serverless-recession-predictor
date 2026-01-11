@@ -1,0 +1,27 @@
+{
+  "target": "recession_in_next_6m",
+  "test_start": "2005-01-31",
+  "model": "logreg",
+  "shift_by": 1,
+  "lags": 3,
+  "n_train": 1032,
+  "n_test": 253,
+  "roc_auc": 0.8484304932735426,
+  "pr_auc": 0.48764878173451154,
+  "precision": 0.28125,
+  "recall": 0.9,
+  "f1": 0.42857142857142855,
+  "threshold": 0.85,
+  "confusion_matrix": [
+    [
+      154,
+      69
+    ],
+    [
+      3,
+      27
+    ]
+  ],
+  "classification_report": "              precision    recall  f1-score   support\n\n           0       0.98      0.69      0.81       223\n           1       0.28      0.90      0.43        30\n\n    accuracy                           0.72       253\n   macro avg       0.63      0.80      0.62       253\nweighted avg       0.90      0.72      0.77       253\n",
+  "feature_count": 60
+}

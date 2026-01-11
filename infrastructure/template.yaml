@@ -1,0 +1,127 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: "FinTech POC: FRED Recession Predictor Infrastructure"
+
+Parameters:
+  UserEmail:
+    Type: String
+    Description: "Email to receive model approval requests"
+    AllowedPattern: "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+    ConstraintDescription: "Must be a valid email address"
+
+Resources:
+  # =============================================================
+  # 1. S3 Bucket (Stores Data & Model Artifacts)
+  # =============================================================
+  ProjectBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+    Properties:
+      BucketName: !Sub "fred-fintech-data-${AWS::AccountId}"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      Tags:
+        - Key: Project
+          Value: FredFinTech
+        - Key: Environment
+          Value: POC
+
+  # =============================================================
+  # 2. IAM Role for SageMaker
+  #    Name: fred-sagemaker-role (matches setup_aws.py)
+  # =============================================================
+  SageMakerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: fred-sagemaker-role
+      Description: "SageMaker execution role for FRED ML Pipeline"
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: sagemaker.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSageMakerFullAccess
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+      Tags:
+        - Key: Project
+          Value: FredFinTech
+
+  # =============================================================
+  # 3. Model Registry Group
+  #    Name: FredRecessionModels
+  # =============================================================
+  ModelRegistryGroup:
+    Type: AWS::SageMaker::ModelPackageGroup
+    Properties:
+      ModelPackageGroupName: FredRecessionModels
+      ModelPackageGroupDescription: "FRED Economic Indicator Models for recession/unemployment prediction"
+      Tags:
+        - Key: Project
+          Value: FredFinTech
+
+  # =============================================================
+  # 4. SNS Topic for Email Notifications
+  #    Name: FredModelApproval
+  # =============================================================
+  NotificationTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: FredModelApproval
+      DisplayName: "FRED Model Approval Notifications"
+      Tags:
+        - Key: Project
+          Value: FredFinTech
+
+  # SNS Email Subscription
+  EmailSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref NotificationTopic
+      Protocol: email
+      Endpoint: !Ref UserEmail
+
+# =============================================================
+# Outputs - Use these values in src/config.py
+# =============================================================
+Outputs:
+  BucketName:
+    Description: "S3 bucket for training data and model artifacts"
+    Value: !Ref ProjectBucket
+    Export:
+      Name: !Sub "${AWS::StackName}-BucketName"
+
+  SageMakerRoleArn:
+    Description: "IAM Role ARN for SageMaker (use in src/config.py)"
+    Value: !GetAtt SageMakerRole.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-SageMakerRoleArn"
+
+  SageMakerRoleName:
+    Description: "IAM Role Name"
+    Value: !Ref SageMakerRole
+
+  ModelPackageGroupName:
+    Description: "Model Registry group name"
+    Value: !Ref ModelRegistryGroup
+
+  TopicArn:
+    Description: "SNS Topic ARN for notifications"
+    Value: !Ref NotificationTopic
+    Export:
+      Name: !Sub "${AWS::StackName}-TopicArn"
+
+  ConfigPyValues:
+    Description: "Copy these values to src/config.py"
+    Value: !Sub |
+      BUCKET_NAME = "fred-fintech-data-${AWS::AccountId}"
+      ROLE_ARN = "${SageMakerRole.Arn}"
+      MODEL_PACKAGE_GROUP = "FredRecessionModels"

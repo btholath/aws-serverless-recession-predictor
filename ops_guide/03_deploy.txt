@@ -1,0 +1,13 @@
+Step 1: Approve the New Version (Manual)
+Before the deployment script can pick it up, you must tell AWS this new version is valid.
+
+Go to AWS Console > SageMaker > Model Registry.
+
+Click on FredRecessionModels.
+
+Click on Version 3 (the one just created).
+
+Click Update Status (top right) → Select Approved → Save.
+
+Step 2: Retry Deployment
+Now run the deployment script again. It will automatically find the latest approved model (Version 3) and deploy it.
