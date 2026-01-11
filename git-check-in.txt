@@ -1,0 +1,8 @@
+#push an existing repository from the command line
+
+~/aws_apps/fred_fintech_app$
+git remote add origin git@github.com:btholath/aws-serverless-recession-predictor.git
+git branch -M main
+git add .
+git commit -m "base version"
+git push -u origin main
